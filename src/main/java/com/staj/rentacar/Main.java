@@ -1,4 +1,4 @@
-﻿package com.staj.rentacar;
+package com.staj.rentacar;
 
 public class Main {
     public static void main(String[] args) {
