@@ -19,7 +19,7 @@ public abstract class Vehicle {
     }
 
     //getter (there is no setter because of final)
-    public String getPlate() {
+     public String getPlate() {
         return plate;
     }
 
