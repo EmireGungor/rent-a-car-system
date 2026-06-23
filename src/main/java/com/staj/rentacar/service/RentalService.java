@@ -7,9 +7,14 @@ import com.staj.rentacar.enums.VehicleStatus;
 import java.util.List;
 
 public class RentalService {
+
     private final List<Vehicle> vehicles;
 
     public RentalService(List<Vehicle> vehicles) {
+        if (vehicles == null) {
+            throw new IllegalArgumentException("Vehicle list cannot be null");
+        }
+
         this.vehicles = vehicles;
     }
 
@@ -60,5 +65,21 @@ public class RentalService {
         vehicle.markAsRented();
 
         return new RentalResult(vehicle.getPlate(), dayCount, totalPrice);
+    }
+
+    public boolean returnVehicle(String plate) {
+        Vehicle vehicle = findVehicleByPlate(plate);
+
+        if (vehicle == null) {
+            return false;
+        }
+        if (vehicle.getStatus() == VehicleStatus.AVAILABLE) {
+            return false;
+        }
+        if (vehicle.getStatus() == VehicleStatus.RENTED) {
+            vehicle.markAsAvailable();
+            return true;
+        }
+        return false;
     }
 }

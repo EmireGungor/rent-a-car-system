@@ -1,57 +1,105 @@
 package com.staj.rentacar;
-import com.staj.rentacar.model.Vehicle; //for TEST2
+
+import com.staj.rentacar.dto.RentalResult;
 import com.staj.rentacar.model.Car;
-import com.staj.rentacar.model.Motorcycle;
+import com.staj.rentacar.model.Vehicle;
+import com.staj.rentacar.service.RentalService;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class Main {
     public static void main(String[] args) {
-        //TEST1 -------------------
-        /*
-        Car car = new Car("34ABC123", "Toyota", "Corolla", 1500.0, true);
-        Motorcycle motorcycle = new Motorcycle("35MTR456", "Yamaha", "MT-07", 900.0, true);
+        List<Vehicle> vehicles = new ArrayList<>();
 
-        System.out.println("Car plate: " + car.getPlate());
-        System.out.println("Car brand: " + car.getBrand());
-        System.out.println("Car model: " + car.getModel());
-        System.out.println("Car minimum rental age: " + car.getMinimumRentalAge());
-        System.out.println("Car has air conditioning: " + car.hasAirConditioning());
-        System.out.println("Car status: " + car.getStatus());
-        System.out.println("Car rental price for 3 days: " + car.calculateRentalPrice(3));
+        RentalService rentalService = new RentalService(vehicles);
 
-        car.markAsRented();
+        Vehicle car = new Car("34ABC123", "Toyota", "Corolla", 1500, true);
 
-        System.out.println("Car status after renting: " + car.getStatus());
+        boolean added = rentalService.addVehicle(car);
 
-        System.out.println("--------------------");
+        System.out.println("Araç eklendi mi?");
+        System.out.println(added);
 
-        System.out.println("Motorcycle plate: " + motorcycle.getPlate());
-        System.out.println("Motorcycle brand: " + motorcycle.getBrand());
-        System.out.println("Motorcycle model: " + motorcycle.getModel());
-        System.out.println("Motorcycle minimum rental age: " + motorcycle.getMinimumRentalAge());
-        System.out.println("Motorcycle helmet required: " + motorcycle.isHelmetRequired());
-        System.out.println("Motorcycle status: " + motorcycle.getStatus());
-        System.out.println("Motorcycle rental price for 2 days: " + motorcycle.calculateRentalPrice(2));
+        Vehicle duplicateCar = new Car("34ABC123", "Honda", "Civic", 1800, true);
 
-        motorcycle.markAsRented();
+        boolean duplicateAdded = rentalService.addVehicle(duplicateCar);
 
-        System.out.println("Motorcycle status after renting: " + motorcycle.getStatus());
-        */
+        System.out.println("Aynı plaka ile ikinci araç eklenemiyor mu?");
+        System.out.println(duplicateAdded == false);
 
-        //TEST2--------------------------------------
-        //Bu testte hasAirConditioning() veya isHelmetRequired() çağırmıyoruz. Çünkü vehicle değişkeninin tipi Vehicle. Vehicle, araba veya motorun özel detaylarını bilmez.
-        //Ortak davranışlara Vehicle üzerinden erişirsin.
-        //Türe özel davranışlara ancak o tür üzerinden erişirsin.
-        Vehicle[] vehicles = {
-                new Car("34CAR001", "Honda", "Civic", 1700.0, true),
-                new Motorcycle("35MOTO001", "Yamaha", "R25", 800.0, true)
-        };
+        Vehicle foundVehicle = rentalService.findVehicleByPlate("34ABC123");
 
-        for (Vehicle vehicle : vehicles) {
-            System.out.println("Plate: " + vehicle.getPlate());
-            System.out.println("Minimum rental age: " + vehicle.getMinimumRentalAge());
-            System.out.println("Rental price for 2 days: " + vehicle.calculateRentalPrice(2));
-            System.out.println("Status: " + vehicle.getStatus());
-            System.out.println("--------------------");
+        System.out.println("Araç plakaya göre bulundu mu?");
+        System.out.println(foundVehicle != null);
+
+        if (foundVehicle != null) {
+            System.out.println("Bulunan araç plakası:");
+            System.out.println(foundVehicle.getPlate());
+
+            System.out.println("Kiralama öncesi durum:");
+            System.out.println(foundVehicle.getStatus());
         }
+
+        RentalResult rentalResult = rentalService.rentVehicle("34ABC123", 25, 4);
+
+        System.out.println("Araç kiralanabildi mi?");
+        System.out.println(rentalResult != null);
+
+        if (rentalResult != null) {
+            System.out.println("RentalResult plaka doğru mu?");
+            System.out.println(rentalResult.getPlate().equals("34ABC123"));
+
+            System.out.println("RentalResult gün sayısı doğru mu?");
+            System.out.println(rentalResult.getDayCount() == 4);
+
+            System.out.println("RentalResult toplam bedel:");
+            System.out.println(rentalResult.getTotalPrice());
+
+            System.out.println("Toplam bedel doğru mu?");
+            System.out.println(rentalResult.getTotalPrice() == 6000.0);
+        }
+
+        System.out.println("Kiralama sonrası durum RENTED mı?");
+        System.out.println(car.getStatus());
+
+        RentalResult secondRentalResult = rentalService.rentVehicle("34ABC123", 25, 3);
+
+        System.out.println("Aynı araç tekrar kiralanmaya çalışınca sonuç null mı?");
+        System.out.println(secondRentalResult == null);
+
+        boolean returned = rentalService.returnVehicle("34ABC123");
+
+        System.out.println("Araç iade edilebildi mi?");
+        System.out.println(returned);
+
+        System.out.println("İade sonrası durum AVAILABLE mı?");
+        System.out.println(car.getStatus());
+
+        System.out.println("Kirada olmayan araç tekrar iade edilmeye çalışınca false mu?");
+        boolean secondReturnResult = rentalService.returnVehicle("34ABC123");
+        System.out.println(secondReturnResult == false);
+
+        System.out.println("Olmayan plaka kiralanmaya çalışınca sonuç null mı?");
+        RentalResult notFoundResult = rentalService.rentVehicle("06XYZ999", 25, 3);
+        System.out.println(notFoundResult == null);
+
+        System.out.println("Yaşı yetmeyen müşteri araba kiralayınca sonuç null mı?");
+        RentalResult underAgeResult = rentalService.rentVehicle("34ABC123", 18, 3);
+        System.out.println(underAgeResult == null);
+
+        System.out.println("Yaşı yetmeyen denemeden sonra araç durumu hala AVAILABLE mı?");
+        System.out.println(car.getStatus());
+
+        System.out.println("Gün sayısı 0 olunca sonuç null mı?");
+        RentalResult zeroDayResult = rentalService.rentVehicle("34ABC123", 25, 0);
+        System.out.println(zeroDayResult == null);
+
+        System.out.println("Gün sayısı negatif olunca sonuç null mı?");
+        RentalResult negativeDayResult = rentalService.rentVehicle("34ABC123", 25, -2);
+        System.out.println(negativeDayResult == null);
+
+        System.out.println("Tüm başarısız denemelerden sonra araç durumu hala AVAILABLE mı?");
+        System.out.println(car.getStatus());
     }
 }
