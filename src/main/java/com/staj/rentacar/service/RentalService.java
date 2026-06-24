@@ -1,5 +1,6 @@
 package com.staj.rentacar.service;
 
+import com.staj.rentacar.exception.*;
 import com.staj.rentacar.model.Vehicle;
 import com.staj.rentacar.dto.RentalResult;
 import com.staj.rentacar.enums.VehicleStatus;
@@ -20,7 +21,7 @@ public class RentalService {
 
     public Vehicle findVehicleByPlate(String plate) {
         if (plate == null) {
-            return null;
+            throw new VehicleNotFoundException(plate);
         }
 
         for (Vehicle vehicle : vehicles) {
@@ -28,37 +29,38 @@ public class RentalService {
                 return vehicle;
             }
         }
-        return null;
+        throw new VehicleNotFoundException(plate);
     }
 
     public boolean addVehicle(Vehicle vehicle) {
         if (vehicle == null) {
             return false;
         }
-        if (findVehicleByPlate(vehicle.getPlate()) != null) { //vehicle exists!!!
-            return false;
+
+        for (Vehicle existingVehicle : vehicles) {
+            if (existingVehicle.getPlate().equalsIgnoreCase(vehicle.getPlate())) { //ignores upper-lower case
+                return false;
+            }
         }
-      vehicles.add(vehicle);
+
+        vehicles.add(vehicle);
         return true;
     }
 
     public RentalResult rentVehicle(String plate, int customerAge, int dayCount) {
-        Vehicle vehicle = findVehicleByPlate(plate);
-
-        if (vehicle == null) {
-            return null;
+        // If the day count is invalid, there is no need to search for the vehicle.
+        if (dayCount <= 0) {
+            throw new InvalidRentalDurationException(dayCount);
         }
 
+        Vehicle vehicle = findVehicleByPlate(plate);
+
         if (vehicle.getStatus() == VehicleStatus.RENTED) {
-            return null;
+            throw new VehicleAlreadyRentedException(plate);
         }
 
         if (customerAge < vehicle.getMinimumRentalAge()) {
-            return null;
-        }
-
-        if (dayCount <= 0) {
-            return null;
+            throw new InsufficientDriverAgeException(customerAge, vehicle.getMinimumRentalAge());
         }
 
         double totalPrice = vehicle.calculateRentalPrice(dayCount);
@@ -70,16 +72,10 @@ public class RentalService {
     public boolean returnVehicle(String plate) {
         Vehicle vehicle = findVehicleByPlate(plate);
 
-        if (vehicle == null) {
-            return false;
-        }
         if (vehicle.getStatus() == VehicleStatus.AVAILABLE) {
-            return false;
+            throw new VehicleNotRentedException(plate);
         }
-        if (vehicle.getStatus() == VehicleStatus.RENTED) {
             vehicle.markAsAvailable();
             return true;
-        }
-        return false;
     }
 }

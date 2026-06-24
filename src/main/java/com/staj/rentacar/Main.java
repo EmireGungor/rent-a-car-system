@@ -1,6 +1,7 @@
 package com.staj.rentacar;
 
 import com.staj.rentacar.dto.RentalResult;
+import com.staj.rentacar.exception.RentalBusinessException;
 import com.staj.rentacar.model.Car;
 import com.staj.rentacar.model.Vehicle;
 import com.staj.rentacar.service.RentalService;
@@ -11,95 +12,91 @@ import java.util.List;
 public class Main {
     public static void main(String[] args) {
         List<Vehicle> vehicles = new ArrayList<>();
-
         RentalService rentalService = new RentalService(vehicles);
 
         Vehicle car = new Car("34ABC123", "Toyota", "Corolla", 1500, true);
 
         boolean added = rentalService.addVehicle(car);
-
-        System.out.println("Araç eklendi mi?");
+        System.out.println("Was the vehicle added?");
         System.out.println(added);
 
         Vehicle duplicateCar = new Car("34ABC123", "Honda", "Civic", 1800, true);
 
         boolean duplicateAdded = rentalService.addVehicle(duplicateCar);
+        System.out.println("Was the duplicate vehicle rejected?");
+        System.out.println(!duplicateAdded);
 
-        System.out.println("Aynı plaka ile ikinci araç eklenemiyor mu?");
-        System.out.println(duplicateAdded == false);
+        printVehicleByPlate(rentalService, "34ABC123");
 
-        Vehicle foundVehicle = rentalService.findVehicleByPlate("34ABC123");
+        tryRentVehicle(rentalService, "34ABC123", 25, 4);
 
-        System.out.println("Araç plakaya göre bulundu mu?");
-        System.out.println(foundVehicle != null);
+        System.out.println("Vehicle status after rental:");
+        System.out.println(car.getStatus());
 
-        if (foundVehicle != null) {
-            System.out.println("Bulunan araç plakası:");
-            System.out.println(foundVehicle.getPlate());
+        tryRentVehicle(rentalService, "34ABC123", 25, 3);
 
-            System.out.println("Kiralama öncesi durum:");
-            System.out.println(foundVehicle.getStatus());
+        tryReturnVehicle(rentalService, "34ABC123");
+
+        System.out.println("Vehicle status after return:");
+        System.out.println(car.getStatus());
+
+        tryReturnVehicle(rentalService, "34ABC123");
+
+        tryRentVehicle(rentalService, "06XYZ999", 25, 3);
+
+        tryRentVehicle(rentalService, "34ABC123", 18, 3);
+
+        System.out.println("Vehicle status after underage rental attempt:");
+        System.out.println(car.getStatus());
+
+        tryRentVehicle(rentalService, "34ABC123", 25, 0);
+
+        tryRentVehicle(rentalService, "34ABC123", 25, -2);
+
+        System.out.println("Vehicle status after all failed attempts:");
+        System.out.println(car.getStatus());
+    }
+
+    //HELPER METHODS
+    private static void printVehicleByPlate(RentalService rentalService, String plate) {
+        try {
+            Vehicle vehicle = rentalService.findVehicleByPlate(plate);
+
+            System.out.println("Vehicle found by plate.");
+            System.out.println("Plate: " + vehicle.getPlate());
+            System.out.println("Brand: " + vehicle.getBrand());
+            System.out.println("Model: " + vehicle.getModel());
+            System.out.println("Status: " + vehicle.getStatus());
+
+        } catch (RentalBusinessException exception) {
+            System.out.println("Vehicle search failed: " + exception.getMessage());
         }
+    }
 
-        RentalResult rentalResult = rentalService.rentVehicle("34ABC123", 25, 4);
+    private static void tryRentVehicle(RentalService rentalService, String plate, int customerAge, int dayCount) {
+        try {
+            RentalResult result = rentalService.rentVehicle(plate, customerAge, dayCount);
 
-        System.out.println("Araç kiralanabildi mi?");
-        System.out.println(rentalResult != null);
+            System.out.println("Rental successful.");
+            System.out.println("Plate: " + result.getPlate());
+            System.out.println("Day count: " + result.getDayCount());
+            System.out.println("Total price: " + result.getTotalPrice());
 
-        if (rentalResult != null) {
-            System.out.println("RentalResult plaka doğru mu?");
-            System.out.println(rentalResult.getPlate().equals("34ABC123"));
-
-            System.out.println("RentalResult gün sayısı doğru mu?");
-            System.out.println(rentalResult.getDayCount() == 4);
-
-            System.out.println("RentalResult toplam bedel:");
-            System.out.println(rentalResult.getTotalPrice());
-
-            System.out.println("Toplam bedel doğru mu?");
-            System.out.println(rentalResult.getTotalPrice() == 6000.0);
+        } catch (RentalBusinessException exception) {
+            System.out.println("Rental failed: " + exception.getMessage());
         }
+    }
 
-        System.out.println("Kiralama sonrası durum RENTED mı?");
-        System.out.println(car.getStatus());
+    private static void tryReturnVehicle(RentalService rentalService, String plate) {
+        try {
+            boolean returned = rentalService.returnVehicle(plate);
 
-        RentalResult secondRentalResult = rentalService.rentVehicle("34ABC123", 25, 3);
+            System.out.println("Vehicle return successful.");
+            System.out.println("Plate: " + plate);
+            System.out.println("Returned: " + returned);
 
-        System.out.println("Aynı araç tekrar kiralanmaya çalışınca sonuç null mı?");
-        System.out.println(secondRentalResult == null);
-
-        boolean returned = rentalService.returnVehicle("34ABC123");
-
-        System.out.println("Araç iade edilebildi mi?");
-        System.out.println(returned);
-
-        System.out.println("İade sonrası durum AVAILABLE mı?");
-        System.out.println(car.getStatus());
-
-        System.out.println("Kirada olmayan araç tekrar iade edilmeye çalışınca false mu?");
-        boolean secondReturnResult = rentalService.returnVehicle("34ABC123");
-        System.out.println(secondReturnResult == false);
-
-        System.out.println("Olmayan plaka kiralanmaya çalışınca sonuç null mı?");
-        RentalResult notFoundResult = rentalService.rentVehicle("06XYZ999", 25, 3);
-        System.out.println(notFoundResult == null);
-
-        System.out.println("Yaşı yetmeyen müşteri araba kiralayınca sonuç null mı?");
-        RentalResult underAgeResult = rentalService.rentVehicle("34ABC123", 18, 3);
-        System.out.println(underAgeResult == null);
-
-        System.out.println("Yaşı yetmeyen denemeden sonra araç durumu hala AVAILABLE mı?");
-        System.out.println(car.getStatus());
-
-        System.out.println("Gün sayısı 0 olunca sonuç null mı?");
-        RentalResult zeroDayResult = rentalService.rentVehicle("34ABC123", 25, 0);
-        System.out.println(zeroDayResult == null);
-
-        System.out.println("Gün sayısı negatif olunca sonuç null mı?");
-        RentalResult negativeDayResult = rentalService.rentVehicle("34ABC123", 25, -2);
-        System.out.println(negativeDayResult == null);
-
-        System.out.println("Tüm başarısız denemelerden sonra araç durumu hala AVAILABLE mı?");
-        System.out.println(car.getStatus());
+        } catch (RentalBusinessException exception) {
+            System.out.println("Vehicle return failed: " + exception.getMessage());
+        }
     }
 }

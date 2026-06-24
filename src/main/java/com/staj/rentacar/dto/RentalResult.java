@@ -1,6 +1,6 @@
 package com.staj.rentacar.dto;
 
-//Kiralama başarılı olduysa sonuç ne?
+// What is the result of RentalService
 public class RentalResult {
     private final String plate;
     private final int dayCount;
@@ -12,13 +12,9 @@ public class RentalResult {
         this.totalPrice = totalPrice;
     }
 
-    public String getPlate() {
-        return plate;
-    }
+    public String getPlate() { return plate; }
 
-    public int getDayCount() {
-        return dayCount;
-    }
+    public int getDayCount() { return dayCount; }
 
     public double getTotalPrice() {
         return totalPrice;
