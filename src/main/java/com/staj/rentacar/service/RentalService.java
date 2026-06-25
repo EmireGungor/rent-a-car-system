@@ -25,26 +25,26 @@ public class RentalService {
         }
 
         for (Vehicle vehicle : vehicles) {
-            if (vehicle.getPlate().equals(plate)) {
+            if (vehicle.getPlate().equalsIgnoreCase(plate)) {
                 return vehicle;
             }
         }
         throw new VehicleNotFoundException(plate);
     }
 
-    public boolean addVehicle(Vehicle vehicle) {
+    public void addVehicle(Vehicle vehicle) {
         if (vehicle == null) {
-            return false;
+            throw new InvalidVehicleException();
         }
 
         for (Vehicle existingVehicle : vehicles) {
             if (existingVehicle.getPlate().equalsIgnoreCase(vehicle.getPlate())) { //ignores upper-lower case
-                return false;
+                throw new DuplicateVehiclePlateException(vehicle.getPlate());
             }
         }
 
         vehicles.add(vehicle);
-        return true;
+
     }
 
     public RentalResult rentVehicle(String plate, int customerAge, int dayCount) {
@@ -69,13 +69,12 @@ public class RentalService {
         return new RentalResult(vehicle.getPlate(), dayCount, totalPrice);
     }
 
-    public boolean returnVehicle(String plate) {
+    public void returnVehicle(String plate) {
         Vehicle vehicle = findVehicleByPlate(plate);
 
         if (vehicle.getStatus() == VehicleStatus.AVAILABLE) {
             throw new VehicleNotRentedException(plate);
         }
-            vehicle.markAsAvailable();
-            return true;
+        vehicle.markAsAvailable();
     }
 }

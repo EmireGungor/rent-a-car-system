@@ -15,16 +15,10 @@ public class Main {
         RentalService rentalService = new RentalService(vehicles);
 
         Vehicle car = new Car("34ABC123", "Toyota", "Corolla", 1500, true);
-
-        boolean added = rentalService.addVehicle(car);
-        System.out.println("Was the vehicle added?");
-        System.out.println(added);
+        tryAddVehicle(rentalService, car);
 
         Vehicle duplicateCar = new Car("34ABC123", "Honda", "Civic", 1800, true);
-
-        boolean duplicateAdded = rentalService.addVehicle(duplicateCar);
-        System.out.println("Was the duplicate vehicle rejected?");
-        System.out.println(!duplicateAdded);
+        tryAddVehicle(rentalService, duplicateCar);
 
         printVehicleByPlate(rentalService, "34ABC123");
 
@@ -57,7 +51,19 @@ public class Main {
         System.out.println(car.getStatus());
     }
 
-    //HELPER METHODS
+    // HELPER METHODS
+    private static void tryAddVehicle(RentalService rentalService, Vehicle vehicle) {
+        try {
+            rentalService.addVehicle(vehicle);
+
+            System.out.println("Vehicle added successfully.");
+            System.out.println("Plate: " + vehicle.getPlate());
+
+        } catch (RentalBusinessException exception) {
+            System.out.println("Vehicle add failed: " + exception.getMessage());
+        }
+    }
+
     private static void printVehicleByPlate(RentalService rentalService, String plate) {
         try {
             Vehicle vehicle = rentalService.findVehicleByPlate(plate);
@@ -89,11 +95,10 @@ public class Main {
 
     private static void tryReturnVehicle(RentalService rentalService, String plate) {
         try {
-            boolean returned = rentalService.returnVehicle(plate);
+            rentalService.returnVehicle(plate);
 
             System.out.println("Vehicle return successful.");
             System.out.println("Plate: " + plate);
-            System.out.println("Returned: " + returned);
 
         } catch (RentalBusinessException exception) {
             System.out.println("Vehicle return failed: " + exception.getMessage());
