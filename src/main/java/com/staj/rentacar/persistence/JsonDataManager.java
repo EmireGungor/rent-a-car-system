@@ -5,12 +5,13 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-//Gson ile içeriği JSON array’e çevirmek için
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
-
-import com.google.gson.JsonObject;
 
 import com.staj.rentacar.model.Car;
 import com.staj.rentacar.model.Motorcycle;
@@ -128,9 +129,49 @@ public class JsonDataManager {
         }
     }
 
-    // Güncel araç listesini JSON dosyasına yazma
+    // Writes the current vehicle list to the JSON file
     public void saveVehicles(List<Vehicle> vehicles) {
+        if (vehicles == null) {
+            throw new IllegalArgumentException("Vehicle list cannot be null");
+        }
 
-        // TODO
+        try {
+            Path path = Path.of(filePath);
+            Path parent = path.getParent();
+
+            if (parent != null) {
+                Files.createDirectories(parent); //data
+            }
+
+            JsonArray jsonArray = new JsonArray(); //empty array
+
+            for (Vehicle vehicle : vehicles) {
+                JsonObject vehicleObject = new JsonObject();
+
+                vehicleObject.addProperty("plate", vehicle.getPlate());
+                vehicleObject.addProperty("brand", vehicle.getBrand());
+                vehicleObject.addProperty("model", vehicle.getModel());
+                vehicleObject.addProperty("dailyRentalPrice", vehicle.getDailyRentalPrice());
+                vehicleObject.addProperty("status", vehicle.getStatus().name());
+
+                if (vehicle instanceof Car car) {
+                    vehicleObject.addProperty("type", "CAR");
+                    vehicleObject.addProperty("hasAirConditioning", car.hasAirConditioning());
+                } else if (vehicle instanceof Motorcycle motorcycle) {
+                    vehicleObject.addProperty("type", "MOTORCYCLE");
+                    vehicleObject.addProperty("helmetRequired", motorcycle.isHelmetRequired());
+                } else {
+                    throw new IllegalStateException("Unknown vehicle class: " + vehicle.getClass().getSimpleName());
+                }
+
+                jsonArray.add(vehicleObject); //add every JsonObjects into JsonArray
+            }
+
+            Gson gson = new GsonBuilder().setPrettyPrinting().create();
+            Files.writeString(path, gson.toJson(jsonArray)); // Write whole array with Json format
+
+        } catch (IOException exception) {
+            throw new IllegalStateException("Could not save vehicles to file", exception);
+        }
     }
 }

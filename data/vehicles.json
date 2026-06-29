@@ -1,20 +1,20 @@
 [
   {
-    "type": "CAR",
     "plate": "34ABC123",
     "brand": "Toyota",
     "model": "Corolla",
     "dailyRentalPrice": 1500.0,
-    "status": "RENTED",
+    "status": "AVAILABLE",
+    "type": "CAR",
     "hasAirConditioning": true
   },
   {
-    "type": "MOTORCYCLE",
     "plate": "35MOTO001",
     "brand": "Yamaha",
     "model": "R25",
     "dailyRentalPrice": 800.0,
-    "status": "AVAILABLE",
+    "status": "RENTED",
+    "type": "MOTORCYCLE",
     "helmetRequired": true
   }
 ]
