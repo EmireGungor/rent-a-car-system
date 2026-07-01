@@ -1,5 +1,6 @@
 package com.staj.rentacar.ui;
 
+import com.staj.rentacar.exception.RentalBusinessException;
 import com.staj.rentacar.model.Car;
 import com.staj.rentacar.model.Motorcycle;
 import com.staj.rentacar.model.Vehicle;
@@ -38,6 +39,8 @@ public class ConsoleMenu {
                     listVehicles();
                     break;
                 case "2":
+                    addNewVehicle();
+                    break;
                 case "3":
                 case "4":
                     System.out.println("This feature is not implemented yet.");
@@ -60,6 +63,7 @@ public class ConsoleMenu {
         System.out.println("5 - Save and exit");
     }
 
+    // HELPER METHODS
     private String readChoice(String prompt, String... validChoices) {
         while (true) {
             System.out.print(prompt);
@@ -76,7 +80,60 @@ public class ConsoleMenu {
         }
     }
 
-    private void listVehicles() {
+    private String readRequiredText(String prompt) {
+        while (true) {
+            System.out.print(prompt);
+
+            String input = scanner.nextLine().trim();
+
+            if (!input.isEmpty()) {
+                return input;
+            }
+
+            System.out.println("This field cannot be empty. Please try again.");
+        }
+    }
+
+    private double readPositiveDouble(String prompt) {
+        while (true) {
+            System.out.print(prompt);
+
+            String input = scanner.nextLine().trim();
+
+            try {
+                double value = Double.parseDouble(input);
+
+                if (value > 0) {
+                    return value;
+                }
+
+                System.out.println("Value must be greater than 0. Example: 1500.50.");
+            } catch (NumberFormatException exception) {
+                System.out.println("Invalid number. Use a positive number like 1500.50.");
+            }
+        }
+    }
+
+    private boolean readYesNo(String prompt) {
+        while (true) {
+            System.out.print(prompt);
+
+            String input = scanner.nextLine().trim().toLowerCase();
+
+            if (input.equals("y") || input.equals("yes")) {
+                return true;
+            }
+
+            if (input.equals("n") || input.equals("no")) {
+                return false;
+            }
+
+            System.out.println("Invalid choice. Please enter y/yes or n/no.");
+        }
+    }
+
+    //CASES
+    private void listVehicles() { //RUN WITH CASE 1
         if (vehicles.isEmpty()) {
             System.out.println("No vehicles found.");
             return;
@@ -101,7 +158,33 @@ public class ConsoleMenu {
         }
     }
 
-    private void saveAndExit() {
+    private void addNewVehicle() { // RUN WITH CASE 2
+        try {
+            String vehicleType = readChoice("Vehicle type (1-Car, 2-Motorcycle): ", "1", "2");
+
+            String plate = readRequiredText("Plate: ");
+            String brand = readRequiredText("Brand: ");
+            String model = readRequiredText("Model: ");
+            double dailyRentalPrice = readPositiveDouble("Daily rental price: ");
+
+            Vehicle vehicle;
+
+            if (vehicleType.equals("1")) {
+                boolean hasAirConditioning = readYesNo("Has air conditioning? (y/n): ");
+                vehicle = new Car(plate, brand, model, dailyRentalPrice, hasAirConditioning);
+            } else {
+                boolean helmetRequired = readYesNo("Helmet required? (y/n): ");
+                vehicle = new Motorcycle(plate, brand, model, dailyRentalPrice, helmetRequired);
+            }
+
+            rentalService.addVehicle(vehicle);
+            System.out.println("Vehicle added successfully.");
+        } catch (RentalBusinessException exception) {
+            System.out.println("Vehicle could not be added: " + exception.getMessage());
+        }
+    }
+
+    private void saveAndExit() { // RUN WITH CASE 5
         jsonDataManager.saveVehicles(vehicles);
         System.out.println("Data saved. Exiting application.");
     }
